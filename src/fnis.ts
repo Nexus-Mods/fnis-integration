@@ -89,7 +89,7 @@ export function fnisTool(state: types.IState, gameId: string): any {
     );
 }
 
-async function runFNIS(api: types.IExtensionApi, profile: types.IProfile): Promise<void> {
+async function runFNIS(api: types.IExtensionApi, profile: types.IProfile, interactive: boolean): Promise<void> {
   const state: types.IState = api.store.getState();
 
   const tool = fnisTool(state, profile.gameId);
@@ -100,7 +100,11 @@ async function runFNIS(api: types.IExtensionApi, profile: types.IProfile): Promi
   const installPath = util.resolvePath('install', state.settings.mods.paths, profile.gameId);
   const modId = await ensureFNISMod(api, profile);
   const modPath = path.join(installPath, modId);
-  await api.runExecutable(tool.path, [ `RedirectFiles="${modPath}"`, 'InstantExecute=1' ], { suggestDeploy: false });
+  const args = [ `RedirectFiles="${modPath}"` ];
+  if (!interactive) {
+    args.push('InstantExecute=1');
+  }
+  await api.runExecutable(tool.path, args, { suggestDeploy: false });
 }
 
 export default runFNIS;

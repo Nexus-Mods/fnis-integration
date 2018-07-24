@@ -43,6 +43,12 @@ function init(context: types.IExtensionContext) {
     undefined,
   );
 
+  context.registerAction('mod-icons', 300, 'refresh', {}, 'Configure FNIS', () => {
+    const state = context.api.store.getState();
+    const profile = selectors.activeProfile(state);
+    fnis(context.api, profile, true);
+  });
+
   context.registerTest('fnis-integration', 'gamemode-activated', (): Promise<types.ITestResult> => {
     const t = context.api.translate;
     const state: types.IState = context.api.store.getState();
@@ -102,7 +108,7 @@ function init(context: types.IExtensionContext) {
             }
 
             setTitle(context.api.translate('Updating FNIS'));
-            return Promise.resolve(fnis(context.api, profile));
+            return Promise.resolve(fnis(context.api, profile, false));
           })
           .then(() => {
             context.api.store.dispatch(actions.setModEnabled(profile.id, modId, true));

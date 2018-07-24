@@ -1,9 +1,10 @@
+import { setAutoFNIS } from './actions';
+
 import { TranslationFunction } from 'i18next';
 import * as React from 'react';
 import { translate } from 'react-i18next';
 import { connect } from 'react-redux';
 import { Toggle } from 'vortex-api';
-import { setAutoFNIS } from './actions';
 
 interface IBaseProps {
   t: TranslationFunction;
