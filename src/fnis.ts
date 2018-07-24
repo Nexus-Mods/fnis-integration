@@ -1,7 +1,7 @@
 import { IDeployment } from './types';
 
 import * as path from 'path';
-import { actions, fs, types, util } from 'vortex-api';
+import { fs, types, util } from 'vortex-api';
 
 export function fnisDataMod(profileName: string): string {
   return `FNIS Data (${profileName})`;

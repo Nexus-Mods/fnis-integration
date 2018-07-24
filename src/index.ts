@@ -1,4 +1,5 @@
 import fnis, { fnisTool, fnisDataMod, calcChecksum } from './fnis';
+import { nexusPageURL, isSupported } from './gameSupport';
 import reducer from './reducers';
 import Settings from './Settings';
 import { IDeployment } from './types';
@@ -22,10 +23,6 @@ function toggleIntegration(api: types.IExtensionApi, gameMode: string) {
   api.store.dispatch(setAutoFNIS(!autoFNIS(state)));
 }
 
-function isSupported(gameMode: string): boolean {
-  return ['skyrimse', 'fallout4', 'skyrimvr', 'fallout4vr'].indexOf(gameMode) !== -1;
-}
-
 function init(context: types.IExtensionContext) {
   (context.registerSettings as any)('Interface', Settings, undefined, undefined, 51);
   context.registerReducer(['settings', 'automation'], reducer);
@@ -47,6 +44,7 @@ function init(context: types.IExtensionContext) {
   );
 
   context.registerTest('fnis-integration', 'gamemode-activated', (): Promise<types.ITestResult> => {
+    const t = context.api.translate;
     const state: types.IState = context.api.store.getState();
     const gameMode = selectors.activeGameId(state);
     const tool = fnisTool(state, gameMode);
@@ -56,10 +54,13 @@ function init(context: types.IExtensionContext) {
     const res: types.ITestResult = {
       severity: 'warning',
       description: {
-        short: 'FNIS not installed',
-        long: 'You have configured FNIS to be run automatically but it\'s not installed for this game. '
-            + 'For the automation to work, FNIS has to be installed and configured for the current game.'
-      }
+        short: t('FNIS not installed'),
+        long: t('You have configured FNIS to be run automatically but it\'s not installed for this game. '
+            + 'For the automation to work, FNIS has to be installed and configured for the current game. '
+            + 'You can press "Fix" to take you to the FNIS download page, then you have to install and '
+            + 'configure it manually.'),
+      },
+      automaticFix: () => (util as any).opn(nexusPageURL(gameMode)),
     };
 
     return Promise.resolve(res);
