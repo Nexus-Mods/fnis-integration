@@ -80,14 +80,16 @@ function init(context: types.IExtensionContext) {
 
       if (util.getSafe(state, ['settings', 'automation', 'autoFNIS'], false)) {
         const profile = selectors.activeProfile(state);
-        context.api.store.dispatch(actions.setModEnabled(profile.id, fnisDataMod(profile.name), false));
+        const modId = fnisDataMod(profile.name);
+        context.api.store.dispatch(actions.setModEnabled(profile.id, modId, false));
+        context.api.store.dispatch((actions as any).clearModRules(profile.gameId, modId));
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         if ((discovery === undefined) || (discovery.path === undefined)) {
           return Promise.resolve();
         }
 
         return calcChecksum(discovery.path, deployment)
-          .then(checksum => {
+          .then(({checksum, mods}) => {
             lastChecksum = checksum;
           });
       } else {
@@ -101,8 +103,14 @@ function init(context: types.IExtensionContext) {
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         const modId = fnisDataMod(profile.name);
         return calcChecksum(discovery.path, deployment)
-          .then(checksum => {
+          .then(({ checksum, mods }) => {
             console.log('checksums', lastChecksum, checksum);
+            mods.forEach(refId => {
+              context.api.store.dispatch(actions.addModRule(profile.gameId, modId, {
+                type: 'after',
+                reference: { id: refId },
+              }));
+            });
             if (checksum === lastChecksum) {
               return Promise.resolve();
             }

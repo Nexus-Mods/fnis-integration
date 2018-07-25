@@ -71,14 +71,21 @@ const expressions = [
   new RegExp(/\\animations\\.*\.hkx$/i),
 ];
 
-export async function calcChecksum(basePath: string, deployment: IDeployment): Promise<string> {
-  const animationFiles = deployment[''].filter(file =>
-    expressions.find(expr => expr.test(file.relPath)) !== undefined);
-  
-  return stringChecksum(JSON.stringify(animationFiles.map(async file => ({
+export async function calcChecksum(basePath: string, deployment: IDeployment): Promise<{ checksum: string, mods: string[] }> {
+  const mods = new Set<string>();
+  const animationFiles = deployment[''].filter((file: types.IDeployedFile) => {
+    const res = expressions.find(expr => expr.test(file.relPath)) !== undefined;
+    if (res) {
+      mods.add(file.source);
+    }
+    return res;
+  });
+
+  const checksum = stringChecksum(JSON.stringify(animationFiles.map(async file => ({
     name: file.relPath,
     checksum: await fileChecksum(path.join(basePath, 'data', file.relPath)),
   }))));
+  return { checksum, mods: Array.from(mods) };
 }
 
 export function fnisTool(state: types.IState, gameId: string): any {
