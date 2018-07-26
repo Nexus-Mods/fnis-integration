@@ -1,13 +1,14 @@
-import { IDeployment } from './types';
+import { IDeployment, IFNISPatch } from './types';
 
 import * as path from 'path';
 import { fs, types, util } from 'vortex-api';
+import { patchListName } from './gameSupport';
 
 export function fnisDataMod(profileName: string): string {
   return `FNIS Data (${profileName})`;
 }
 
-function createFNISMod(api: types.IExtensionApi, modName: string, profile: types.IProfile): Promise<void> {
+async function createFNISMod(api: types.IExtensionApi, modName: string, profile: types.IProfile): Promise<void> {
   const mod: types.IMod = {
     id: modName,
     state: 'installed',
@@ -18,7 +19,7 @@ function createFNISMod(api: types.IExtensionApi, modName: string, profile: types
     type: '',
   };
 
-  return new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     api.events.emit('create-mod', profile.gameId, mod, async (error) => {
       if (error !== null) {
         return reject(error);
@@ -26,6 +27,10 @@ function createFNISMod(api: types.IExtensionApi, modName: string, profile: types
       resolve();
     });
   });
+
+  const state = api.store.getState();
+  const installPath = util.resolvePath('install', state.settings.mods.paths, profile.gameId);
+  await fs.ensureFileAsync(path.join(installPath, modName, 'tools', 'GenerateFNIS_for_Users', 'MyPatches.txt'));
 }
 
 async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile): Promise<string> {
@@ -71,7 +76,8 @@ const expressions = [
   new RegExp(/\\animations\\.*\.hkx$/i),
 ];
 
-export async function calcChecksum(basePath: string, deployment: IDeployment): Promise<{ checksum: string, mods: string[] }> {
+export async function calcChecksum(basePath: string,
+                                   deployment: IDeployment): Promise<{ checksum: string, mods: string[] }> {
   const mods = new Set<string>();
   const animationFiles = deployment[''].filter((file: types.IDeployedFile) => {
     const res = expressions.find(expr => expr.test(file.relPath)) !== undefined;
@@ -82,9 +88,9 @@ export async function calcChecksum(basePath: string, deployment: IDeployment): P
   });
 
   const checksum = stringChecksum(JSON.stringify(animationFiles.map(async file => ({
-    name: file.relPath,
-    checksum: await fileChecksum(path.join(basePath, 'data', file.relPath)),
-  }))));
+      name: file.relPath,
+      checksum: await fileChecksum(path.join(basePath, 'data', file.relPath)),
+    }))));
   return { checksum, mods: Array.from(mods) };
 }
 
@@ -96,6 +102,40 @@ export function fnisTool(state: types.IState, gameId: string): any {
     );
 }
 
+const patchTransform = [
+  { key: 'id', transform: input => input },
+  { key: 'hidden', transform: input => input === '1' },
+  { key: 'numBones', transform: input => parseInt(input, 10) },
+  { key: 'requiredBehaviorsPattern', transform: input => input },
+  { key: 'description', transform: input => input },
+  { key: 'requiredFile', transform: input => input },
+];
+
+export async function readFNISPatches(api: types.IExtensionApi, profile: types.IProfile): Promise<IFNISPatch[]> {
+  const state: types.IState = api.store.getState();
+  const tool = fnisTool(state, profile.gameId);
+  const patchData = await fs.readFileAsync(
+    path.join(path.dirname(tool.path), patchListName(profile.gameId)), { encoding: 'utf-8' });
+  return patchData
+    .split('\n')
+    .slice(1)
+    .filter(line => !line.startsWith('\'') && (line.trim().length > 0))
+    .map(line => line.split('#').slice(0, 6).reduce((prev: any, value: string, idx: number) => {
+      prev[patchTransform[idx].key] = patchTransform[idx].transform(value);
+      return prev;
+    }, []))
+    .filter((patch: IFNISPatch) => !patch.hidden);
+}
+
+async function writePatches(toolPath: string, patches: string[]) {
+  const patchesPath = path.join(toolPath, 'MyPatches.txt');
+  if (patches.length > 0) {
+    await fs.writeFileAsync(patchesPath, patches.join('\n'), { encoding: 'utf-8' });
+  } else {
+    await fs.removeAsync(patchesPath);
+  }
+}
+
 async function runFNIS(api: types.IExtensionApi, profile: types.IProfile, interactive: boolean): Promise<void> {
   const state: types.IState = api.store.getState();
 
@@ -103,6 +143,8 @@ async function runFNIS(api: types.IExtensionApi, profile: types.IProfile, intera
   if (tool === undefined) {
     return Promise.reject(new Error('FNIS not installed or not configured'));
   }
+
+  await writePatches(path.dirname(tool.path), util.getSafe(state, ['settings', 'fnis', 'patches', profile.id], []));
 
   const installPath = util.resolvePath('install', state.settings.mods.paths, profile.gameId);
   const modId = await ensureFNISMod(api, profile);

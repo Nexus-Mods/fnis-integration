@@ -1,4 +1,4 @@
-import { setAutoFNIS } from './actions';
+import { setAutoRun } from './actions';
 
 import { TranslationFunction } from 'i18next';
 import * as React from 'react';
@@ -11,22 +11,22 @@ interface IBaseProps {
 }
 
 interface IConnectedProps {
-  autoFNIS: boolean;
+  autoRun: boolean;
 }
 
 interface IActionProps {
-  onEnableAutoFNIS: (enable: boolean) => void;
+  onEnableautoRun: (enable: boolean) => void;
 }
 
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
 function Settings(props: IProps) {
-  const { t, autoFNIS, onEnableAutoFNIS } = props;
+  const { t, autoRun, onEnableautoRun } = props;
   return (
     <div>
       <Toggle
-        checked={autoFNIS}
-        onToggle={onEnableAutoFNIS}
+        checked={autoRun}
+        onToggle={onEnableautoRun}
       >
         {t('Automatically run FNIS on every deployment')}
       </Toggle>
@@ -36,13 +36,13 @@ function Settings(props: IProps) {
 
 function mapStateToProps(state: any): IConnectedProps {
   return {
-    autoFNIS: state.settings.automation.autoFNIS,
+    autoRun: state.settings.fnis.autoRun,
   };
 }
 
 function mapDispatchToProps(dispatch: Redux.Dispatch<any>): IActionProps {
   return {
-    onEnableAutoFNIS: (enable: boolean) => dispatch(setAutoFNIS(enable)),
+    onEnableautoRun: (enable: boolean) => dispatch(setAutoRun(enable)),
   };
 }
 

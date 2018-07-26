@@ -6,11 +6,17 @@ import { types, util } from 'vortex-api';
  */
 const settingsReducer: types.IReducerSpec = {
   reducers: {
-    [actions.setAutoFNIS as any]: (state, payload) =>
-      util.setSafe(state, ['autoFNIS'], payload),
+    [actions.setAutoRun as any]: (state, payload) =>
+      util.setSafe(state, ['autoRun'], payload),
+    [actions.setPatches as any]: (state, payload) =>
+      util.setSafe(state, ['patches', payload.profileId], payload.patches),
+    [actions.setNeedToRun as any]: (state, payload) =>
+      util.setSafe(state, ['needToRun', payload.profileId], payload.force),
   },
   defaults: {
-    autoFNIS: true,
+    autoRun: true,
+    patches: {},
+    needToRun: {},
   },
 };
 
