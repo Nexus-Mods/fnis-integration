@@ -1,3 +1,4 @@
+import { setAutoRun, setPatches, setNeedToRun } from './actions';
 import fnis, { fnisTool, fnisDataMod, calcChecksum, readFNISPatches } from './fnis';
 import { nexusPageURL, isSupported } from './gameSupport';
 import reducer from './reducers';
@@ -6,8 +7,7 @@ import { IDeployment } from './types';
 
 import * as Promise from 'bluebird';
 import * as I18next from 'i18next';
-import { actions, types, selectors, util } from 'vortex-api';
-import { setAutoRun, setPatches, setNeedToRun } from './actions';
+import { actions, fs, types, selectors, util } from 'vortex-api';
 
 interface IFNISProps {
   gameMode: string;
@@ -15,7 +15,7 @@ interface IFNISProps {
 }
 
 function autoRun(state: types.IState): boolean {
-  return util.getSafe(state, ['settings', 'automation', 'autoRun'], false);
+  return util.getSafe(state, ['settings', 'fnis', 'autoRun'], false);
 }
 
 function toggleIntegration(api: types.IExtensionApi, gameMode: string) {
@@ -70,17 +70,20 @@ function init(context: types.IExtensionContext) {
           Object.keys(result.input).filter(patch => result.input[patch])));
         context.api.store.dispatch(setNeedToRun(profile.id, true));
       }
+    })
+    .catch(err => {
+      context.api.showErrorNotification('Failed to read list of available patches', err);
     });
-  });
+  }, () => isSupported(selectors.activeGameId(context.api.store.getState())));
 
   context.registerTest('fnis-integration', 'gamemode-activated', (): Promise<types.ITestResult> => {
     const t = context.api.translate;
     const state: types.IState = context.api.store.getState();
     const gameMode = selectors.activeGameId(state);
-    const tool = fnisTool(state, gameMode);
-    if (tool !== undefined) {
+    if (!isSupported(gameMode)) {
       return Promise.resolve(undefined);
     }
+    const tool = fnisTool(state, gameMode);
     const res: types.ITestResult = {
       severity: 'warning',
       description: {
@@ -93,17 +96,24 @@ function init(context: types.IExtensionContext) {
       automaticFix: () => (util as any).opn(nexusPageURL(gameMode)),
     };
 
-    return Promise.resolve(res);
+    if (tool !== undefined) {
+      // if the tool is configured, verify it's actually installed at that location
+      return fs.statAsync(tool.path)
+        .then(() => undefined)
+        .catch(() => res);
+    } else {
+      return Promise.resolve(res);
+    }
   });
 
   context.once(() => {
     let lastChecksum: string;
-    (context.api as any).onAsync('will-deploy', (deployment: IDeployment) => {
+    (context.api as any).onAsync('will-deploy', (profileId: string, deployment: IDeployment) => {
       lastChecksum = undefined;
-      const state = context.api.store.getState();
+      const state: types.IState = context.api.store.getState();
 
       if (util.getSafe(state, ['settings', 'fnis', 'autoRun'], false)) {
-        const profile = selectors.activeProfile(state);
+        const profile = state.persistent.profiles[profileId];
         if (profile === undefined) {
           return;
         }
@@ -128,10 +138,10 @@ function init(context: types.IExtensionContext) {
         return Promise.resolve();
       }
     });
-    (context.api as any).onAsync('did-deploy', (deployment: IDeployment, setTitle: (title: string) => void) => {
+    (context.api as any).onAsync('did-deploy', (profileId: string, deployment: IDeployment, setTitle: (title: string) => void) => {
       const state = context.api.store.getState();
       if (lastChecksum !== undefined) {
-        const profile = selectors.activeProfile(state);
+        const profile = state.persistent.profiles[profileId];
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         const modId = fnisDataMod(profile.name);
         const allMods = state.persistent.mods[profile.gameId];

@@ -114,17 +114,25 @@ const patchTransform = [
 export async function readFNISPatches(api: types.IExtensionApi, profile: types.IProfile): Promise<IFNISPatch[]> {
   const state: types.IState = api.store.getState();
   const tool = fnisTool(state, profile.gameId);
-  const patchData = await fs.readFileAsync(
-    path.join(path.dirname(tool.path), patchListName(profile.gameId)), { encoding: 'utf-8' });
-  return patchData
-    .split('\n')
-    .slice(1)
-    .filter(line => !line.startsWith('\'') && (line.trim().length > 0))
-    .map(line => line.split('#').slice(0, 6).reduce((prev: any, value: string, idx: number) => {
-      prev[patchTransform[idx].key] = patchTransform[idx].transform(value);
-      return prev;
-    }, []))
-    .filter((patch: IFNISPatch) => !patch.hidden);
+  try {
+    const patchData = await fs.readFileAsync(
+      path.join(path.dirname(tool.path), patchListName(profile.gameId)), { encoding: 'utf-8' });
+    return patchData
+      .split('\n')
+      .slice(1)
+      .filter(line => !line.startsWith('\'') && (line.trim().length > 0))
+      .map(line => line.split('#').slice(0, 6).reduce((prev: any, value: string, idx: number) => {
+        prev[patchTransform[idx].key] = patchTransform[idx].transform(value);
+        return prev;
+      }, []))
+      .filter((patch: IFNISPatch) => !patch.hidden);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return [];
+    } else {
+      throw err;
+    }
+  }
 }
 
 async function writePatches(toolPath: string, patches: string[]) {
