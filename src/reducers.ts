@@ -14,7 +14,7 @@ const settingsReducer: types.IReducerSpec = {
       util.setSafe(state, ['needToRun', payload.profileId], payload.force),
   },
   defaults: {
-    autoRun: true,
+    autoRun: false,
     patches: {},
     needToRun: {},
   },

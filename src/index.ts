@@ -79,8 +79,13 @@ function init(context: types.IExtensionContext) {
   context.registerTest('fnis-integration', 'gamemode-activated', (): Promise<types.ITestResult> => {
     const t = context.api.translate;
     const state: types.IState = context.api.store.getState();
+    if (!util.getSafe(state, ['settings', 'fnis', 'autoRun'], false)) {
+      // not enabled
+      return Promise.resolve(undefined);
+    }
     const gameMode = selectors.activeGameId(state);
     if (!isSupported(gameMode)) {
+      // game not supported
       return Promise.resolve(undefined);
     }
     const tool = fnisTool(state, gameMode);
@@ -90,10 +95,8 @@ function init(context: types.IExtensionContext) {
         short: t('FNIS not installed'),
         long: t('You have configured FNIS to be run automatically but it\'s not installed for this game. '
             + 'For the automation to work, FNIS has to be installed and configured for the current game. '
-            + 'You can press "Fix" to take you to the FNIS download page, then you have to install and '
-            + 'configure it manually.'),
+            + 'You can download it from {{url}}.', { replace: { url: nexusPageURL(gameMode) } }),
       },
-      automaticFix: () => (util as any).opn(nexusPageURL(gameMode)),
     };
 
     if (tool !== undefined) {
