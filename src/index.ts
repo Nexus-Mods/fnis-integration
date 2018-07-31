@@ -51,7 +51,7 @@ function init(context: types.IExtensionContext) {
     readFNISPatches(context.api, profile)
     .then(patches => {
       return context.api.showDialog('question', 'Select patches for this profile', {
-        text: 'Please select the patches to activate in FNIS.\n'
+        text: 'Please select the patches to activate in FNIS (when run automatically!).\n'
             + 'Only select patches you have the corresponding mod for!\n'
             + 'This list is stored separately for each profile.',
         checkboxes: patches.map(patch => ({
