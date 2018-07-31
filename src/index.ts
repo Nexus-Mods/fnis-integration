@@ -117,7 +117,7 @@ function init(context: types.IExtensionContext) {
 
       if (util.getSafe(state, ['settings', 'fnis', 'autoRun'], false)) {
         const profile = state.persistent.profiles[profileId];
-        if (profile === undefined) {
+        if ((profile === undefined) || !isSupported(profile.gameId)) {
           return;
         }
         const modId = fnisDataMod(profile.name);
