@@ -72,6 +72,9 @@ function init(context: types.IExtensionContext) {
       }
     })
     .catch(err => {
+      if (err instanceof util.ProcessCanceled) {
+        return; 
+      }
       context.api.showErrorNotification('Failed to read list of available patches', err);
     });
   }, () => isSupported(selectors.activeGameId(context.api.store.getState())));

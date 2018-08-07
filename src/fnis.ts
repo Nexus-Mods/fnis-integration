@@ -97,7 +97,9 @@ export async function calcChecksum(basePath: string,
 export function fnisTool(state: types.IState, gameId: string): any {
   const tools: { [id: string]: any } = util.getSafe(state,
                             ['settings', 'gameMode', 'discovered', gameId, 'tools'], {});
-  return Object.keys(tools).map(id => tools[id]).find(iter => 
+  return Object.keys(tools).map(id => tools[id])
+    .filter(iter => (iter !== undefined) && (iter.path !== undefined))
+    .find(iter => 
       path.basename(iter.path).toLowerCase() === 'generatefnisforusers.exe'
     );
 }
@@ -114,6 +116,9 @@ const patchTransform = [
 export async function readFNISPatches(api: types.IExtensionApi, profile: types.IProfile): Promise<IFNISPatch[]> {
   const state: types.IState = api.store.getState();
   const tool = fnisTool(state, profile.gameId);
+  if (tool === undefined) {
+    return Promise.reject(new util.ProcessCanceled('FNIS not installed'));
+  }
   try {
     const patchData = await fs.readFileAsync(
       path.join(path.dirname(tool.path), patchListName(profile.gameId)), { encoding: 'utf-8' });
