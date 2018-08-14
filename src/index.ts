@@ -124,7 +124,8 @@ function init(context: types.IExtensionContext) {
           return;
         }
         const modId = fnisDataMod(profile.name);
-        if (!util.getSafe(profile, ['modState', modId, 'enabled'], true)) {
+        if ((util.getSafe(state, ['mods', modId], undefined) !== undefined)
+            && !util.getSafe(profile, ['modState', modId, 'enabled'], true)) {
           // if the data mod is known but disabled, don't update it and most importantly:
           //  don't activate it after deployment, that's probably not what the user wants
           return;
