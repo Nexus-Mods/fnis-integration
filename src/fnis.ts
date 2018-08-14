@@ -1,7 +1,7 @@
 import { IDeployment, IFNISPatch } from './types';
 
 import * as path from 'path';
-import { fs, types, util } from 'vortex-api';
+import { fs, selectors, types, util } from 'vortex-api';
 import { patchListName } from './gameSupport';
 
 export function fnisDataMod(profileName: string): string {
@@ -29,7 +29,8 @@ async function createFNISMod(api: types.IExtensionApi, modName: string, profile:
   });
 
   const state = api.store.getState();
-  const installPath = util.resolvePath('install', state.settings.mods.paths, profile.gameId);
+  const installPath = (selectors as any).installPathForGame(state, profile.gameId);
+
   await fs.ensureFileAsync(path.join(installPath, modName, 'tools', 'GenerateFNIS_for_Users', 'MyPatches.txt'));
 }
 
@@ -159,7 +160,7 @@ async function runFNIS(api: types.IExtensionApi, profile: types.IProfile, intera
 
   await writePatches(path.dirname(tool.path), util.getSafe(state, ['settings', 'fnis', 'patches', profile.id], []));
 
-  const installPath = util.resolvePath('install', state.settings.mods.paths, profile.gameId);
+  const installPath = (selectors as any).installPathForGame(state, profile.gameId);
   const modId = await ensureFNISMod(api, profile);
   const modPath = path.join(installPath, modId);
   const args = [ `RedirectFiles="${modPath}"` ];
