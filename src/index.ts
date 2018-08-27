@@ -43,7 +43,7 @@ function init(context: types.IExtensionContext) {
     undefined,
   );
 
-  context.registerAction('mod-icons', 300, 'refresh', {}, 'Configure FNIS', () => {
+  context.registerAction('mod-icons', 300, 'settings', {}, 'Configure FNIS', () => {
     const state = context.api.store.getState();
     const profile = selectors.activeProfile(state);
     const enabledPatches = new Set<string>(
