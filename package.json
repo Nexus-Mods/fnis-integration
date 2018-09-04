@@ -27,6 +27,7 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
     "copyfiles": "^2.0.0",
+    "exe-version": "Nexus-Mods/node-exe-version",
     "react-redux": "^5.0.7",
     "redux-act": "^1.7.4",
     "ts-loader": "^3.0.0",
