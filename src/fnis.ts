@@ -1,8 +1,8 @@
+import { patchListName } from './gameSupport';
 import { IDeployment, IFNISPatch } from './types';
 
 import * as path from 'path';
-import { fs, selectors, types, util } from 'vortex-api';
-import { patchListName } from './gameSupport';
+import { actions, fs, selectors, types, util } from 'vortex-api';
 
 export function fnisDataMod(profileName: string): string {
   return `FNIS Data (${profileName})`;
@@ -13,7 +13,13 @@ async function createFNISMod(api: types.IExtensionApi, modName: string, profile:
     id: modName,
     state: 'installed',
     attributes: {
-      name: modName,
+      name: 'FNIS Data',
+      logicalFileName: 'FNIS Data',
+      // concrete id doesn't really matter but needs to be set to for grouping
+      modId: 42,
+      version: '1.0.0',
+      variant: profile.name,
+      installTime: new Date(),
     },
     installationPath: modName,
     type: '',
@@ -39,6 +45,15 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
   const modName = fnisDataMod(profile.name);
   if (util.getSafe(state, ['persistent', 'mods', profile.gameId, modName], undefined) === undefined) {
     await createFNISMod(api, modName, profile);
+  } else {
+    // give the user an indication when this was last updated
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'installTime', new Date()));
+    // the rest here is only required to update mods from previous vortex versions
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'name', 'FNIS Data'));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'logicalFileName', 'FNIS Data'));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'modId', 42));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'version', '1.0.0'));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant', profile.name));
   }
   return modName;
 }
