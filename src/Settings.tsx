@@ -28,7 +28,7 @@ function Settings(props: IProps) {
         checked={autoRun}
         onToggle={onEnableautoRun}
       >
-        {t('Automatically run FNIS on every deployment')}
+        {t('Run FNIS on Deployment Event')}
       </Toggle>
     </div>
   );
