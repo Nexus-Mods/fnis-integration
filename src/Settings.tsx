@@ -4,7 +4,9 @@ import { TranslationFunction } from 'i18next';
 import * as React from 'react';
 import { translate } from 'react-i18next';
 import { connect } from 'react-redux';
-import { Toggle } from 'vortex-api';
+import * as Redux from 'redux';
+import { ThunkDispatch } from 'redux-thunk';
+import { Toggle, types } from 'vortex-api';
 
 interface IBaseProps {
   t: TranslationFunction;
@@ -40,7 +42,7 @@ function mapStateToProps(state: any): IConnectedProps {
   };
 }
 
-function mapDispatchToProps(dispatch: Redux.Dispatch<any>): IActionProps {
+function mapDispatchToProps(dispatch: ThunkDispatch<types.IState, null, Redux.Action>): IActionProps {
   return {
     onEnableautoRun: (enable: boolean) => dispatch(setAutoRun(enable)),
   };

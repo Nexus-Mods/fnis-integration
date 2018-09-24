@@ -6,6 +6,7 @@ import Settings from './Settings';
 import { IDeployment } from './types';
 
 import * as Promise from 'bluebird';
+import getVersion from 'exe-version';
 import * as I18next from 'i18next';
 import { actions, fs, types, selectors, util } from 'vortex-api';
 
@@ -21,6 +22,33 @@ function autoRun(state: types.IState): boolean {
 function toggleIntegration(api: types.IExtensionApi, gameMode: string) {
   const state: types.IState = api.store.getState();
   api.store.dispatch(setAutoRun(!autoRun(state)));
+}
+
+function checkFailedResult(t: I18next.TranslationFunction,
+                           gameMode: string,
+                           reason: 'missing' | 'outdated'): types.ITestResult {
+  const short = {
+    missing: t('FNIS not installed'),
+    outdated: t('FNIS outdated'),
+  }[reason];
+
+  const long = {
+    missing: t('You have configured Vortex to run FNIS automatically but it\'s not installed for this game. '
+              + 'For the automation to work, FNIS has to be installed and configured for the current game. '
+              + 'You can download it from {{url}}.', { replace: { url: nexusPageURL(gameMode) } }),
+    outdated: t('You have configured Vortex to run FNIS automatically but the installed version of FNIS is '
+                + 'too old and doesn\'t support being embedded. Please download and install at least '
+                + 'version 7.4 from {{url}}.', { replace: { url: nexusPageURL(gameMode) } }),
+  }[reason];
+
+  const res: types.ITestResult = {
+    severity: 'warning',
+    description: {
+      short,
+      long,
+    },
+  };
+  return res;
 }
 
 function init(context: types.IExtensionContext) {
@@ -43,7 +71,7 @@ function init(context: types.IExtensionContext) {
     undefined,
   );
 
-  context.registerAction('mod-icons', 300, 'refresh', {}, 'Configure FNIS', () => {
+  context.registerAction('mod-icons', 300, 'settings', {}, 'Configure FNIS', () => {
     const state = context.api.store.getState();
     const profile = selectors.activeProfile(state);
     const enabledPatches = new Set<string>(
@@ -92,23 +120,26 @@ function init(context: types.IExtensionContext) {
       return Promise.resolve(undefined);
     }
     const tool = fnisTool(state, gameMode);
-    const res: types.ITestResult = {
-      severity: 'warning',
-      description: {
-        short: t('FNIS not installed'),
-        long: t('You have configured FNIS to be run automatically but it\'s not installed for this game. '
-            + 'For the automation to work, FNIS has to be installed and configured for the current game. '
-            + 'You can download it from {{url}}.', { replace: { url: nexusPageURL(gameMode) } }),
-      },
-    };
 
     if (tool !== undefined) {
       // if the tool is configured, verify it's actually installed at that location
       return fs.statAsync(tool.path)
-        .then(() => undefined)
-        .catch(() => res);
+        .then(() => {
+          const versionStr: string = getVersion(tool.path);
+          if (versionStr === undefined) {
+            return checkFailedResult(t, gameMode, 'missing');
+          } else {
+            const version = versionStr.split('.').map(seg => parseInt(seg, 10));
+            if ((version[0] < 7)
+                || ((version[0] === 7) && (version[1] < 4))) {
+              return checkFailedResult(t, gameMode, 'outdated');
+            }
+          }
+          return undefined;
+        })
+        .catch(() => checkFailedResult(t, gameMode, 'missing'));
     } else {
-      return Promise.resolve(res);
+      return Promise.resolve(checkFailedResult(t, gameMode, 'missing'));
     }
   });
 
@@ -124,7 +155,8 @@ function init(context: types.IExtensionContext) {
           return;
         }
         const modId = fnisDataMod(profile.name);
-        if (!util.getSafe(profile, ['modState', modId, 'enabled'], true)) {
+        if ((util.getSafe(state, ['mods', modId], undefined) !== undefined)
+            && !util.getSafe(profile, ['modState', modId, 'enabled'], true)) {
           // if the data mod is known but disabled, don't update it and most importantly:
           //  don't activate it after deployment, that's probably not what the user wants
           return;
