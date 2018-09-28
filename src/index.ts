@@ -162,7 +162,6 @@ function init(context: types.IExtensionContext) {
           return;
         }
         context.api.store.dispatch(actions.setModEnabled(profile.id, modId, false));
-        context.api.store.dispatch((actions as any).clearModRules(profile.gameId, modId));
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         if ((discovery === undefined) || (discovery.path === undefined)) {
           return Promise.resolve();
@@ -177,20 +176,29 @@ function init(context: types.IExtensionContext) {
       }
     });
     (context.api as any).onAsync('did-deploy', (profileId: string, deployment: IDeployment, setTitle: (title: string) => void) => {
-      const state = context.api.store.getState();
+      const { store } = context.api;
+      const state = store.getState();
       if (lastChecksum !== undefined) {
         const profile = state.persistent.profiles[profileId];
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         const modId = fnisDataMod(profile.name);
         const allMods = state.persistent.mods[profile.gameId];
+        // TODO: this is a hack. We don't want the FNIS Data mod being enabled to trigger a new deployment,
+        //   but this is probably true for everything that runs as a post-deploy callback but _not_ for everything
+        //   else that is triggered separately
+        const didNeedDeployment = (state.persistent as any).deployment.needToDeploy[profile.gameId];
         return calcChecksum(discovery.path, deployment)
           .then(({ checksum, mods }) => {
+            store.dispatch((actions as any).clearModRules(profile.gameId, modId));
             mods.forEach(refId => {
-              context.api.store.dispatch(actions.addModRule(profile.gameId, modId, {
+              store.dispatch(actions.addModRule(profile.gameId, modId, {
                 type: 'after',
                 reference: { id: refId },
               }));
             });
+            if (!didNeedDeployment) {
+              store.dispatch((actions as any).setDeploymentNecessary(profile.gameId, false));
+            }
             if ((checksum === lastChecksum)
                 && (allMods[modId] !== undefined)
                 && !util.getSafe(state, ['settings', 'fnis', 'needToRun', profile.id], false)) {
@@ -201,8 +209,8 @@ function init(context: types.IExtensionContext) {
             return Promise.resolve(fnis(context.api, profile, false));
           })
           .then(() => {
-            context.api.store.dispatch(actions.setModEnabled(profile.id, modId, true));
-            context.api.store.dispatch(setNeedToRun(profile.id, false));
+            store.dispatch(actions.setModEnabled(profile.id, modId, true));
+            store.dispatch(setNeedToRun(profile.id, false));
             return (context.api as any).emitAndAwait('deploy-single-mod', profile.gameId, modId);
           });
       } else {

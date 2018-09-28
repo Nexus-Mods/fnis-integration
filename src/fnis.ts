@@ -67,7 +67,11 @@ export function fileChecksum(filePath: string): Promise<string> {
       stream.on('data', (data) => {
         hash.update(data);
       });
-      stream.on('end', () => resolve(hash.digest('hex')));
+      stream.on('end', () => {
+        stream.close();
+        stream.destroy();
+        return resolve(hash.digest('hex'));
+      });
       stream.on('error', (err) => {
         reject(err);
       });
