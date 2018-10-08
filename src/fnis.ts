@@ -4,8 +4,15 @@ import { IDeployment, IFNISPatch } from './types';
 import * as path from 'path';
 import { actions, fs, selectors, types, util } from 'vortex-api';
 
+// most of these are invalid on windows only but it's not worth the effort allowing them on other oses
+const INVALID_CHARS = /[:/\\*?"<>|]/g;
+
+function sanitizeProfileName(input: string) {
+  return input.replace(INVALID_CHARS, '_');
+}
+
 export function fnisDataMod(profileName: string): string {
-  return `FNIS Data (${profileName})`;
+  return `FNIS Data (${sanitizeProfileName(profileName)})`;
 }
 
 async function createFNISMod(api: types.IExtensionApi, modName: string, profile: types.IProfile): Promise<void> {
@@ -18,7 +25,7 @@ async function createFNISMod(api: types.IExtensionApi, modName: string, profile:
       // concrete id doesn't really matter but needs to be set to for grouping
       modId: 42,
       version: '1.0.0',
-      variant: profile.name,
+      variant: sanitizeProfileName(profile.name.replace(INVALID_CHARS, '_')),
       installTime: new Date(),
     },
     installationPath: modName,
@@ -53,7 +60,7 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'logicalFileName', 'FNIS Data'));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'modId', 42));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'version', '1.0.0'));
-    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant', profile.name));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant', sanitizeProfileName(profile.name)));
   }
   return modName;
 }
