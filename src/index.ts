@@ -8,7 +8,7 @@ import { IDeployment } from './types';
 import * as Promise from 'bluebird';
 import getVersion from 'exe-version';
 import * as I18next from 'i18next';
-import { actions, fs, types, selectors, util } from 'vortex-api';
+import { actions, fs, log, types, selectors, util } from 'vortex-api';
 
 interface IFNISProps {
   gameMode: string;
@@ -169,6 +169,7 @@ function init(context: types.IExtensionContext) {
 
         return calcChecksum(discovery.path, deployment)
           .then(({checksum, mods}) => {
+            log('debug', 'Animations checksum calculated', checksum);
             lastChecksum = checksum;
           });
       } else {
@@ -189,6 +190,7 @@ function init(context: types.IExtensionContext) {
         const didNeedDeployment = (state.persistent as any).deployment.needToDeploy[profile.gameId];
         return calcChecksum(discovery.path, deployment)
           .then(({ checksum, mods }) => {
+            log('debug', 'Animations checksum after deployment', checksum);
             store.dispatch((actions as any).clearModRules(profile.gameId, modId));
             mods.forEach(refId => {
               store.dispatch(actions.addModRule(profile.gameId, modId, {

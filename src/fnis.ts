@@ -2,7 +2,7 @@ import { patchListName } from './gameSupport';
 import { IDeployment, IFNISPatch } from './types';
 
 import * as path from 'path';
-import { actions, fs, selectors, types, util } from 'vortex-api';
+import { actions, fs, log, selectors, types, util } from 'vortex-api';
 
 // most of these are invalid on windows only but it's not worth the effort allowing them on other oses
 const INVALID_CHARS = /[:/\\*?"<>|]/g;
@@ -114,6 +114,7 @@ export async function calcChecksum(basePath: string,
     return res;
   });
 
+  log('debug', 'Files relevant for animation baking', animationFiles.length);
   const checksum = stringChecksum(JSON.stringify(animationFiles.map(async file => ({
       name: file.relPath,
       checksum: await fileChecksum(path.join(basePath, 'data', file.relPath)),
