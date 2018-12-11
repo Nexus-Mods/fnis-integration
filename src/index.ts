@@ -181,6 +181,10 @@ function init(context: types.IExtensionContext) {
       const state = store.getState();
       if (lastChecksum !== undefined) {
         const profile = state.persistent.profiles[profileId];
+        if (profile === undefined) {
+          // profile got deleted while deploying? Shouldn't have been possible
+          return Promise.resolve();
+        }
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         const modId = fnisDataMod(profile.name);
         const allMods = state.persistent.mods[profile.gameId];
