@@ -168,9 +168,12 @@ function init(context: types.IExtensionContext) {
         }
 
         return calcChecksum(discovery.path, deployment)
-          .then(({checksum, mods}) => {
+          .then(({ checksum, mods }) => {
             log('debug', 'Animations checksum calculated', checksum);
             lastChecksum = checksum;
+          })
+          .catch(err => {
+            context.api.showErrorNotification('Failed to calculate FNIS checksum', err);
           });
       } else {
         return Promise.resolve();
@@ -218,6 +221,9 @@ function init(context: types.IExtensionContext) {
             store.dispatch(actions.setModEnabled(profile.id, modId, true));
             store.dispatch(setNeedToRun(profile.id, false));
             return (context.api as any).emitAndAwait('deploy-single-mod', profile.gameId, modId);
+          })
+          .catch(err => {
+            context.api.showErrorNotification('Failed to run FNIS', err);
           });
       } else {
         return Promise.resolve();

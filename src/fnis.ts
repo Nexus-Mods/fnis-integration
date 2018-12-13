@@ -66,6 +66,7 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
 }
 
 export function fileChecksum(filePath: string): Promise<string> {
+  const stackErr = new Error();
   return new Promise<string>((resolve, reject) => {
     try {
       const { createHash } = require('crypto');
@@ -80,9 +81,11 @@ export function fileChecksum(filePath: string): Promise<string> {
         return resolve(hash.digest('hex'));
       });
       stream.on('error', (err) => {
+        err.stack = stackErr.stack;
         reject(err);
       });
     } catch (err) {
+      err.stack = stackErr.stack;
       reject(err);
     }
   });
@@ -125,6 +128,8 @@ class ConcurrencyLimit {
     try {
       // forward cb result
       return await cb();
+    } catch (err) {
+      return undefined;
     } finally {
       // increment limit again
       ++this.mLimit;
@@ -169,12 +174,21 @@ export async function calcChecksum(basePath: string,
 
   log('debug', 'Files relevant for animation baking', animationFiles.length);
   const conlim = new ConcurrencyLimit(100);
-  const checksum = stringChecksum(JSON.stringify(animationFiles.map(async file => ({
+  try {
+    const checksum = stringChecksum(JSON.stringify(animationFiles.map(async file => ({
       name: file.relPath,
-      checksum: await conlim.do(() => fileChecksum(path.join(basePath, 'data', file.relPath))),
+      checksum: await conlim.do(() => {
+        try {
+          return fileChecksum(path.join(basePath, 'data', file.relPath));
+        } catch (err) {
+          return Promise.resolve('');
+        }
+      }),
     }))));
-
-  return { checksum, mods: Array.from(mods) };
+    return { checksum, mods: Array.from(mods) };
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export function fnisTool(state: types.IState, gameId: string): any {
