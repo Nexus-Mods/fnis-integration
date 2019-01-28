@@ -223,7 +223,10 @@ function init(context: types.IExtensionContext) {
             return (context.api as any).emitAndAwait('deploy-single-mod', profile.gameId, modId);
           })
           .catch(err => {
-            context.api.showErrorNotification('Failed to run FNIS', err);
+            const isMisconfigured = (err instanceof util.ProcessCanceled);
+            context.api.showErrorNotification('Failed to run FNIS', 
+            isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err, 
+            { allowReport: !isMisconfigured });
           });
       } else {
         return Promise.resolve();
