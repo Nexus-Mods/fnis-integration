@@ -251,7 +251,7 @@ async function runFNIS(api: types.IExtensionApi, profile: types.IProfile, intera
 
   const tool = fnisTool(state, profile.gameId);
   if (tool === undefined) {
-    return Promise.reject(new util.ProcessCanceled('FNIS not installed or not configured correctly'));
+    return Promise.reject(new util.SetupError('FNIS not installed or not configured correctly'));
   }
 
   await writePatches(path.dirname(tool.path), util.getSafe(state, ['settings', 'fnis', 'patches', profile.id], []));
