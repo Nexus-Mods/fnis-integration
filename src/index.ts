@@ -225,8 +225,8 @@ function init(context: types.IExtensionContext) {
           .catch(err => {
             const isMisconfigured = (err instanceof util.ProcessCanceled);
             context.api.showErrorNotification('Failed to run FNIS', 
-            isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err, 
-            { allowReport: !isMisconfigured });
+              isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err, 
+              { allowReport: !isMisconfigured });
           });
       } else {
         return Promise.resolve();
