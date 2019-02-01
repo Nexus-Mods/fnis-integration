@@ -105,7 +105,12 @@ function init(context: types.IExtensionContext) {
       }
       context.api.showErrorNotification('Failed to read list of available patches', err);
     });
-  }, () => isSupported(selectors.activeGameId(context.api.store.getState())));
+  }, () => {
+    const state = context.api.store.getState();
+    const gameMode = selectors.activeGameId(state);
+    const tool = fnisTool(state, gameMode);
+    return (isSupported(gameMode) && (tool !== undefined))
+  });
 
   context.registerTest('fnis-integration', 'gamemode-activated', (): Promise<types.ITestResult> => {
     const t = context.api.translate;
