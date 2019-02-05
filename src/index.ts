@@ -195,7 +195,7 @@ function init(context: types.IExtensionContext) {
         }
         const discovery: types.IDiscoveryResult = state.settings.gameMode.discovered[profile.gameId];
         const modId = fnisDataMod(profile.name);
-        const allMods = state.persistent.mods[profile.gameId];
+        const allMods = state.persistent.mods[profile.gameId] || {};
         // TODO: this is a hack. We don't want the FNIS Data mod being enabled to trigger a new deployment,
         //   but this is probably true for everything that runs as a post-deploy callback but _not_ for everything
         //   else that is triggered separately
