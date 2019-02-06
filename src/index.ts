@@ -219,7 +219,7 @@ function init(context: types.IExtensionContext) {
               return Promise.resolve();
             }
 
-            setTitle(context.api.translate('Updating FNIS'));
+            setTitle(context.api.translate('Updating animations (FNIS)'));
             return Promise.resolve(fnis(context.api, profile, false));
           })
           .then(() => {
