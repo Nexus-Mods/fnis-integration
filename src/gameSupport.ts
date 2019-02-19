@@ -4,6 +4,11 @@ const gameSupport = {
     fnisModId: 11811,
     patchListName: 'PatchList.txt',
   },
+  enderal: {
+    nexusSection: 'skyrim',
+    fnisModId: 11811,
+    patchListName: 'PatchList.txt',
+  },
   skyrimse: {
     nexusSection: 'skyrimspecialedition',
     fnisModId: 3038,
