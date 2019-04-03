@@ -197,6 +197,12 @@ function init(context: types.IExtensionContext) {
         }
         const discovery: types.IDiscoveryResult =
           state.settings.gameMode.discovered[profile.gameId];
+
+        if ((discovery === undefined) || (discovery.path === undefined)) {
+          // game got "undiscovered"?
+          return Promise.resolve();
+        }
+
         const modId = fnisDataMod(profile.name);
         const allMods = state.persistent.mods[profile.gameId] || {};
         // TODO: this is a hack. We don't want the FNIS Data mod being enabled to trigger a new
