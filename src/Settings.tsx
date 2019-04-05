@@ -1,15 +1,15 @@
 import { setAutoRun } from './actions';
 
-import { TranslationFunction } from 'i18next';
+import I18next from 'i18next';
 import * as React from 'react';
-import { translate } from 'react-i18next';
+import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import * as Redux from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { Toggle, types } from 'vortex-api';
 
 interface IBaseProps {
-  t: TranslationFunction;
+  t: typeof I18next.t;
 }
 
 interface IConnectedProps {
@@ -49,6 +49,6 @@ function mapDispatchToProps(dispatch: ThunkDispatch<types.IState, null, Redux.Ac
 }
 
 export default 
-  translate(['common', 'fnis-integration'], { wait: false })(
+  withTranslation(['common', 'fnis-integration'])(
     connect(mapStateToProps, mapDispatchToProps)(
-      Settings));
+      Settings) as any) as React.ComponentClass<{}>;

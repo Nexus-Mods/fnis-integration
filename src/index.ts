@@ -7,8 +7,10 @@ import { IDeployment } from './types';
 
 import * as Promise from 'bluebird';
 import getVersion from 'exe-version';
-import * as I18next from 'i18next';
+import I18next from 'i18next';
 import { actions, fs, log, selectors, types, util } from 'vortex-api';
+
+type TranslationFunction = typeof I18next.t;
 
 interface IFNISProps {
   gameMode: string;
@@ -24,7 +26,7 @@ function toggleIntegration(api: types.IExtensionApi, gameMode: string) {
   api.store.dispatch(setAutoRun(!autoRun(state)));
 }
 
-function checkFailedResult(t: I18next.TranslationFunction,
+function checkFailedResult(t: TranslationFunction,
                            gameMode: string,
                            reason: 'missing' | 'outdated'): types.ITestResult {
   const short = {
@@ -65,7 +67,7 @@ function init(context: types.IExtensionContext) {
     }, 'download',
     'FNIS Integration', (props: IFNISProps) => toggleIntegration(context.api, props.gameMode),
     (props: IFNISProps) => isSupported(props.gameMode),
-    (t: I18next.TranslationFunction, props: IFNISProps) => (
+    (t: TranslationFunction, props: IFNISProps) => (
       props.enabled ? t('Yes') : t('No')
     ),
     undefined,
