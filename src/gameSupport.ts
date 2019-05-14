@@ -17,7 +17,7 @@ const gameSupport = {
   skyrimvr: {
     nexusSection: 'skyrimspecialedition',
     fnisModId: 3038,
-    patchListName: 'PatchListSE.txt',
+    patchListName: 'PatchListVR.txt',
   }
 }
 
