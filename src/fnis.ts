@@ -233,7 +233,7 @@ export async function readFNISPatches(api: types.IExtensionApi,
         prev[patchTransform[idx].key] = patchTransform[idx].transform(value);
         return prev;
       }, []))
-      .filter((patch: IFNISPatch) => !patch.hidden);
+      .filter((patch: IFNISPatch) => !patch.hidden && (patch.numBones === 0));
   } catch (err) {
     if (err.code === 'ENOENT') {
       return [];

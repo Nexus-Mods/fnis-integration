@@ -78,6 +78,7 @@ function init(context: types.IExtensionContext) {
     const profile = selectors.activeProfile(state);
     const enabledPatches = new Set<string>(
       util.getSafe(state, ['settings', 'fnis', 'patches', profile.id], []));
+
     readFNISPatches(context.api, profile)
     .then(patches => {
       return context.api.showDialog('question', 'Select patches for this profile', {
