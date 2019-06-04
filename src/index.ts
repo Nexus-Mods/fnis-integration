@@ -217,6 +217,10 @@ function init(context: types.IExtensionContext) {
             log('debug', 'Animations checksum after deployment', checksum);
             store.dispatch((actions as any).clearModRules(profile.gameId, modId));
             mods.forEach(refId => {
+              log('debug', 'add fnis data load-after', { refId });
+              if (refId === modId) {
+                return;
+              }
               store.dispatch(actions.addModRule(profile.gameId, modId, {
                 type: 'after',
                 reference: { id: refId },
