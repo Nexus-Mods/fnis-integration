@@ -134,6 +134,7 @@ function init(context: types.IExtensionContext) {
       return fs.statAsync(tool.path)
         .then(() => {
           const versionStr: string = getVersion(tool.path);
+          log('debug', 'fnis tool setup', { path: tool.path, version: versionStr || 'missing' });
           if (versionStr === undefined) {
             return checkFailedResult(t, gameMode, 'missing');
           } else {
@@ -247,10 +248,17 @@ function init(context: types.IExtensionContext) {
             if (err instanceof util.UserCanceled) {
               return Promise.resolve();
             }
-            const isMisconfigured = (err instanceof util.SetupError);
-            context.api.showErrorNotification('Failed to run FNIS',
-              isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err,
-              { allowReport: !isMisconfigured });
+            if (err.code === 'UNKNOWN') {
+              context.api.showErrorNotification('Failed to run FNIS',
+                'An unknown error occurred starting FNIS. This is usually caused by a broken installation '
+                + 'or the tool being set up incorrectly.',
+                { allowReport: false });
+            } else {
+              const isMisconfigured = (err instanceof util.SetupError);
+              context.api.showErrorNotification('Failed to run FNIS',
+                isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err,
+                { allowReport: !isMisconfigured });
+            }
           });
       } else {
         return Promise.resolve();
