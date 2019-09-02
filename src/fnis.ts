@@ -3,6 +3,7 @@ import { IDeployment, IFNISPatch } from './types';
 
 import * as path from 'path';
 import { actions, fs, log, selectors, types, util } from 'vortex-api';
+import { fileMD5 } from 'vortexmt';
 
 // most of these are invalid on windows only but it's not worth the effort allowing them elsewhere
 const INVALID_CHARS = /[:/\\*?"<>|]/g;
@@ -28,6 +29,7 @@ async function createFNISMod(api: types.IExtensionApi, modName: string,
       version: '1.0.0',
       variant: sanitizeProfileName(profile.name.replace(INVALID_CHARS, '_')),
       installTime: new Date(),
+      generated: true,
     },
     installationPath: modName,
     type: '',
@@ -66,13 +68,18 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'version', '1.0.0'));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant',
                                                sanitizeProfileName(profile.name)));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'generated', true));
   }
   return modName;
 }
 
 export function fileChecksum(filePath: string): Promise<string> {
-  const stackErr = new Error();
+  // const stackErr = new Error();
   return new Promise<string>((resolve, reject) => {
+    fileMD5(filePath, (err: Error, result: string) => (err !== null)
+      ? reject(err)
+      : resolve(result));
+    /*
     try {
       const { createHash } = require('crypto');
       const hash = createHash('md5');
@@ -92,7 +99,7 @@ export function fileChecksum(filePath: string): Promise<string> {
     } catch (err) {
       err.stack = stackErr.stack;
       reject(err);
-    }
+    }*/
   });
 }
 
