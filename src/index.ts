@@ -250,14 +250,14 @@ function init(context: types.IExtensionContext) {
             }
             if (err.code === 'UNKNOWN') {
               context.api.showErrorNotification('Failed to run FNIS',
-                'An unknown error occurred starting FNIS. This is usually caused by a broken installation '
-                + 'or the tool being set up incorrectly.',
-                { allowReport: false });
+                'An unknown error occurred starting FNIS. This is usually caused by a broken '
+                + 'installation or the tool being set up incorrectly.',
+                { allowReport: false, id: 'fnis-failed-to-run' });
             } else {
               const isMisconfigured = (err instanceof util.SetupError);
               context.api.showErrorNotification('Failed to run FNIS',
                 isMisconfigured ? 'Please install FNIS and add it as a tool inside Vortex' : err,
-                { allowReport: !isMisconfigured });
+                { allowReport: !isMisconfigured, id: 'fnis-failed-to-run' });
             }
           });
       } else {
