@@ -5,9 +5,9 @@ import reducer from './reducers';
 import Settings from './Settings';
 import { IDeployment } from './types';
 
-import * as Promise from 'bluebird';
+import Promise from 'bluebird';
 import getVersion from 'exe-version';
-import I18next from 'i18next';
+import * as I18next from 'i18next';
 import { actions, fs, log, selectors, types, util } from 'vortex-api';
 
 type TranslationFunction = typeof I18next.t;
