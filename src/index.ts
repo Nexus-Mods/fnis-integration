@@ -7,7 +7,7 @@ import { IDeployment } from './types';
 
 import Promise from 'bluebird';
 import getVersion from 'exe-version';
-import * as I18next from 'i18next';
+import I18next from 'i18next';
 import { actions, fs, log, selectors, types, util } from 'vortex-api';
 
 type TranslationFunction = typeof I18next.t;
@@ -37,10 +37,12 @@ function checkFailedResult(t: TranslationFunction,
   const long = {
     missing: t('You have configured Vortex to run FNIS automatically but it\'s not installed for this game. '
               + 'For the automation to work, FNIS has to be installed and configured for the current game. '
-              + 'You can download it from [url]{{url}}[/url].', { replace: { url: nexusPageURL(gameMode) } }),
+              + 'You can download it from [url]{{url}}[/url].',
+              { replace: { url: nexusPageURL(gameMode) } }),
     outdated: t('You have configured Vortex to run FNIS automatically but the installed version of FNIS is '
                 + 'too old and doesn\'t support being embedded. Please download and install at least '
-                + 'version 7.4 from [url]{{url}}[/url].', { replace: { url: nexusPageURL(gameMode) } }),
+                + 'version 7.4 from [url]{{url}}[/url].',
+              { replace: { url: nexusPageURL(gameMode) } }),
   }[reason];
 
   const res: types.ITestResult = {

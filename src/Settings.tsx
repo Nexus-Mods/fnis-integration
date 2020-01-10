@@ -1,6 +1,6 @@
 import { setAutoRun } from './actions';
 
-import * as I18next from 'i18next';
+import I18next from 'i18next';
 import * as React from 'react';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';

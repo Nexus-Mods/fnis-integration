@@ -3077,9 +3077,9 @@ vm-browserify@0.0.4:
   dependencies:
     indexof "0.0.1"
 
-vortex-api@Nexus-Mods/vortex-api:
-  version "0.18.1-r1"
-  resolved "https://codeload.github.com/Nexus-Mods/vortex-api/tar.gz/082ca166bbc4658517f37288eacbd26de66d8a95"
+vortex-api@Nexus-Mods/Vortex-api#electron7:
+  version "1.1.1-electron7.2"
+  resolved "https://codeload.github.com/Nexus-Mods/Vortex-api/tar.gz/fb7bda1f9f63cc0d0dd251bfe65dcb11e4449762"
 
 watchpack@^1.5.0:
   version "1.6.0"
