@@ -27,10 +27,10 @@
     "copyfiles": "^2.1.1",
     "exe-version": "Nexus-Mods/node-exe-version",
     "react-redux": "^5.0.7",
-    "redux-act": "^1.7.4",
-    "ts-loader": "^5.3.3",
-    "typescript": "^2.9.2",
-    "vortex-api": "Nexus-Mods/vortex-api",
-    "webpack": "^4.29.6"
+    "redux-act": "^1.8.0",
+    "ts-loader": "^7.0.1",
+    "typescript": "^3.8.3",
+    "vortex-api": "Nexus-Mods/vortex-api#electron7",
+    "webpack": "^4.42.1"
   }
 }
