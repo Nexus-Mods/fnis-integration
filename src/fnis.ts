@@ -75,6 +75,14 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
 
 export function fileChecksum(filePath: string): Promise<string> {
   const stackErr = new Error();
+  const updateErr = (err: Error) => {
+    err.stack = [].concat(
+      err.stack.split('\n').slice(0, 1),
+      stackErr.stack.split('\n').slice(1),
+    ).join('\n');
+    return err;
+  };
+
   return new Promise<string>((resolve, reject) => {
     try {
       const { createHash } = require('crypto');
@@ -89,12 +97,10 @@ export function fileChecksum(filePath: string): Promise<string> {
         return resolve(hash.digest('hex'));
       });
       stream.on('error', (err) => {
-        err.stack = stackErr.stack;
-        reject(err);
+        reject(updateErr(err));
       });
     } catch (err) {
-      err.stack = stackErr.stack;
-      reject(err);
+      reject(updateErr(err));
     }
   });
 }
@@ -114,61 +120,6 @@ const expressions = [
   new RegExp(/\\animations\\.*\.hkx$/i),
 ];
 
-class ConcurrencyLimit {
-  private mLimit: number;
-  private mNext: () => any;
-  private mEndOfQueue: Promise<void>;
-  constructor(limit: number) {
-    this.mLimit = limit;
-    this.mEndOfQueue = Promise.resolve();
-  }
-
-  public async do(cb: () => Promise<any>): Promise<any> {
-    if (this.mLimit <= 0) {
-      return this.enqueue(cb);
-    }
-    return this.process(cb);
-  }
-
-  private async process(cb: () => Promise<any>): Promise<any> {
-    // reduce limit while processing
-    --this.mLimit;
-    try {
-      // forward cb result
-      return await cb();
-    } catch (err) {
-      return undefined;
-    } finally {
-      // increment limit again
-      ++this.mLimit;
-      // if there is something in the queue, process it
-      if (this.mNext !== undefined) {
-        this.mNext();
-      }
-    }
-  }
-
-  private enqueue(cb: () => Promise<any>): Promise<any> {
-    return new Promise((outerResolve, outerReject) => {
-      this.mEndOfQueue = this.mEndOfQueue
-        .then(() => new Promise((resolve) => {
-          // this pauses the queue until someone calls mNext
-          this.mNext = resolve;
-        })
-        .then(() => {
-          // once the queue is ticked, reset mNext in case there
-          // is nothing else queued, then process the actual promise
-          this.mNext = undefined;
-          this.process(cb)
-            .then(outerResolve)
-            .catch(outerReject);
-          // this resolves immediately, so the next promise in the queue
-          // gets paused
-        }));
-    });
-  }
-}
-
 export async function calcChecksum(basePath: string,
                                    deployment: IDeployment)
                                    : Promise<{ checksum: string, mods: string[] }> {
@@ -182,7 +133,7 @@ export async function calcChecksum(basePath: string,
   });
 
   log('debug', 'Files relevant for animation baking', animationFiles.length);
-  const conlim = new ConcurrencyLimit(100);
+  const conlim = new util.ConcurrencyLimiter(100);
   try {
     const checksum = stringChecksum(JSON.stringify(
       await Promise.all(animationFiles.map(async file => ({

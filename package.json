@@ -30,7 +30,7 @@
     "redux-act": "^1.8.0",
     "ts-loader": "^7.0.1",
     "typescript": "^3.8.3",
-    "vortex-api": "Nexus-Mods/vortex-api#electron7",
+    "vortex-api": "Nexus-Mods/vortex-api",
     "webpack": "^4.42.1"
   }
 }
