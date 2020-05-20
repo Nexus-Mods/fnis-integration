@@ -6,7 +6,7 @@ import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import * as Redux from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
-import { Toggle, types } from 'vortex-api';
+import { More, Toggle, types } from 'vortex-api';
 
 interface IBaseProps {
   t: typeof I18next.t;
@@ -30,7 +30,16 @@ function Settings(props: IProps) {
         checked={autoRun}
         onToggle={onEnableautoRun}
       >
-        {t('Run FNIS on Deployment Event')}
+        {t('Run FNIS on Deployment Event (if necessary)')}
+        <More id='fnis-setting' name={t('Running FNIS automatically')}>
+          {t('Any time you deploy, Vortex will check if any mod containing animations '
+            + 'has changed. If so, it will run FNIS and create or update a mod named "FNIS Data". '
+            + 'This mod contains the animations generated for your system based on your mod loadout '
+            + 'and it is supposed to load after all mods containing animations. '
+            + 'This should get set up automatically.\n\n'
+            + 'Important: If FNIS produces an error message it will still open a window and the '
+            + 'deployment will be paused until you close FNIS.')}
+        </More>
       </Toggle>
     </div>
   );
@@ -42,7 +51,8 @@ function mapStateToProps(state: any): IConnectedProps {
   };
 }
 
-function mapDispatchToProps(dispatch: ThunkDispatch<types.IState, null, Redux.Action>): IActionProps {
+function mapDispatchToProps(dispatch: ThunkDispatch<types.IState, null, Redux.Action>)
+    : IActionProps {
   return {
     onEnableautoRun: (enable: boolean) => dispatch(setAutoRun(enable)),
   };

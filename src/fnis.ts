@@ -152,9 +152,8 @@ export async function calcChecksum(basePath: string,
   }
 }
 
-export function fnisTool(state: types.IState, gameId: string): any {
-  const tools: { [id: string]: any } = util.getSafe(state,
-                            ['settings', 'gameMode', 'discovered', gameId, 'tools'], {});
+export function fnisTool(state: types.IState, gameId: string) {
+  const tools = state.settings.gameMode.discovered[gameId]?.tools || {};
   return Object.keys(tools).map(id => tools[id])
     .filter(iter => (iter !== undefined) && (iter.path !== undefined))
     .find(iter => path.basename(iter.path).toLowerCase() === 'generatefnisforusers.exe');
@@ -244,6 +243,13 @@ async function runFNIS(api: types.IExtensionApi, profile: types.IProfile,
 
   const tool = fnisTool(state, profile.gameId);
   if (tool === undefined) {
+    log('info', 'fnis not configured');
+    return Promise.reject(new util.SetupError('FNIS not installed or not configured correctly'));
+  }
+  try {
+    await fs.statAsync(tool.path);
+  } catch (err) {
+    log('info', 'fnis configured but can\'t be run', err.message);
     return Promise.reject(new util.SetupError('FNIS not installed or not configured correctly'));
   }
 

@@ -194,7 +194,7 @@ function init(context: types.IExtensionContext) {
     (context.api as any).onAsync('did-deploy',
         (profileId: string, deployment: IDeployment, setTitle: (title: string) => void) => {
       const { store } = context.api;
-      const state = store.getState();
+      const state = context.api.getState();
       if (lastChecksum !== undefined) {
         const profile = state.persistent.profiles[profileId];
         if (profile === undefined) {
@@ -214,23 +214,14 @@ function init(context: types.IExtensionContext) {
         // TODO: this is a hack. We don't want the FNIS Data mod being enabled to trigger a new
         //   deployment, but this is probably true for everything that runs as a post-deploy
         //   callback but _not_ for everything else that is triggered separately
-        const didNeedDeployment = (state.persistent as any).deployment.needToDeploy[profile.gameId];
+        const didNeedDeployment = state.persistent.deployment.needToDeploy[profile.gameId];
+        let dependentMods: string[];
         return calcChecksum(discovery.path, deployment)
           .then(({ checksum, mods }) => {
+            dependentMods = mods;
             log('debug', 'Animations checksum after deployment', checksum);
-            store.dispatch((actions as any).clearModRules(profile.gameId, modId));
-            mods.forEach(refId => {
-              log('debug', 'add fnis data load-after', { refId });
-              if (refId === modId) {
-                return;
-              }
-              store.dispatch(actions.addModRule(profile.gameId, modId, {
-                type: 'after',
-                reference: { id: refId },
-              }));
-            });
             if (!didNeedDeployment) {
-              store.dispatch((actions as any).setDeploymentNecessary(profile.gameId, false));
+              store.dispatch(actions.setDeploymentNecessary(profile.gameId, false));
             }
             if ((checksum === lastChecksum)
                 && (allMods[modId] !== undefined)
@@ -242,6 +233,18 @@ function init(context: types.IExtensionContext) {
             return Promise.resolve(fnis(context.api, profile, false));
           })
           .then(() => {
+            store.dispatch(actions.clearModRules(profile.gameId, modId));
+            dependentMods.forEach(refId => {
+              log('debug', 'add fnis data load-after', { refId });
+              if (refId === modId) {
+                return;
+              }
+              store.dispatch(actions.addModRule(profile.gameId, modId, {
+                type: 'after',
+                reference: { id: refId },
+              }));
+            });
+
             store.dispatch(actions.setModEnabled(profile.id, modId, true));
             store.dispatch(setNeedToRun(profile.id, false));
             return (context.api as any).emitAndAwait('deploy-single-mod', profile.gameId, modId);
