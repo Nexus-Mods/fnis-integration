@@ -133,19 +133,22 @@ export async function calcChecksum(basePath: string,
   });
 
   log('debug', 'Files relevant for animation baking', animationFiles.length);
-  const conlim = new util.ConcurrencyLimiter(100);
+  const conlim = new util.ConcurrencyLimiter(100,
+    err => ['EBADF', 'EMFILE'].includes(err['code']));
   try {
-    const checksum = stringChecksum(JSON.stringify(
-      await Promise.all(animationFiles.map(async file => ({
+    const fileChecksums = await Promise.all(animationFiles.map(async file => ({
         name: file.relPath,
         checksum: await conlim.do(async () => {
           try {
             return await fileChecksum(path.join(basePath, 'data', file.relPath));
           } catch (err) {
+            // this will likely lead to unnecessarily running fnis
+            log('error', 'failed to checksum', { path: file.relPath, error: err.message });
             return Promise.resolve('');
           }
         }),
-      })))));
+      })));
+    const checksum = stringChecksum(JSON.stringify(fileChecksums));
     return { checksum, mods: Array.from(mods) };
   } catch (err) {
     return undefined;
