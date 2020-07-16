@@ -133,7 +133,7 @@ export async function calcChecksum(basePath: string,
   });
 
   log('debug', 'Files relevant for animation baking', animationFiles.length);
-  const conlim = new util.ConcurrencyLimiter(100,
+  const conlim = new util.ConcurrencyLimiter(20,
     err => ['EBADF', 'EMFILE'].includes(err['code']));
   try {
     const fileChecksums = await Promise.all(animationFiles.map(async file => ({

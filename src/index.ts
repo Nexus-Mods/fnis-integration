@@ -251,7 +251,7 @@ function init(context: types.IExtensionContext) {
 
             store.dispatch(actions.setModEnabled(profile.id, modId, true));
             store.dispatch(setNeedToRun(profile.id, false));
-            return (context.api as any).emitAndAwait('deploy-single-mod', profile.gameId, modId);
+            return context.api.emitAndAwait('deploy-single-mod', profile.gameId, modId);
           })
           .catch(err => {
             if (err instanceof util.UserCanceled) {
