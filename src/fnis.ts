@@ -143,7 +143,9 @@ export async function calcChecksum(basePath: string,
             return await fileChecksum(path.join(basePath, 'data', file.relPath));
           } catch (err) {
             // this will likely lead to unnecessarily running fnis
-            log('error', 'failed to checksum', { path: file.relPath, error: err.message });
+            if (err.code !== 'ENOENT') {
+              log('error', 'failed to checksum', { path: file.relPath, error: err.message });
+            } // after uninstalling a mod it's completely valid for a file to be missing
             return Promise.resolve('');
           }
         }),
