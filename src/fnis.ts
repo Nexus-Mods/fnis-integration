@@ -55,8 +55,8 @@ async function createFNISMod(api: types.IExtensionApi, modName: string,
 async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile): Promise<string> {
   const state: types.IState = api.store.getState();
   const modName = fnisDataMod(profile.name);
-  if (util.getSafe(state, ['persistent', 'mods', profile.gameId, modName],
-                   undefined) === undefined) {
+  const mod = state.persistent.mods[profile.gameId]?.[modName];
+  if (mod === undefined) {
     await createFNISMod(api, modName, profile);
   } else {
     // give the user an indication when this was last updated
@@ -69,6 +69,9 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'version', '1.0.0'));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant',
                                                sanitizeProfileName(profile.name)));
+    if (mod.installationPath === undefined) {
+      api.store.dispatch(actions.setModInstallationPath(profile.gameId, modName, modName));
+    }
   }
   return modName;
 }

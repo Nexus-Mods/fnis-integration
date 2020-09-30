@@ -229,6 +229,7 @@ function init(context: types.IExtensionContext) {
             }
             if ((checksum === lastChecksum)
                 && (allMods[modId] !== undefined)
+                && (allMods[modId].installationPath !== undefined)
                 && !util.getSafe(state, ['settings', 'fnis', 'needToRun', profile.id], false)) {
               return Promise.resolve();
             }
