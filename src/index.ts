@@ -50,6 +50,7 @@ function checkFailedResult(t: TranslationFunction,
     description: {
       short,
       long,
+      localize: false,
     },
   };
   return res;
