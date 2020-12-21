@@ -110,7 +110,11 @@ function init(context: types.IExtensionContext) {
       }
     })
     .catch(err => {
-      if (err instanceof util.ProcessCanceled) {
+      const userCanceled = (err instanceof util.UserCanceled);
+      if ((err instanceof util.ProcessCanceled) || userCanceled) {
+        if (userCanceled) {
+          log('debug', 'Failed to read list of available patches', err);
+        }
         return;
       }
       context.api.showErrorNotification('Failed to read list of available patches', err);
