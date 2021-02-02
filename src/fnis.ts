@@ -138,26 +138,22 @@ export async function calcChecksum(basePath: string,
   log('debug', 'Files relevant for animation baking', animationFiles.length);
   const conlim = new util.ConcurrencyLimiter(20,
     err => ['EBADF', 'EMFILE'].includes(err['code']));
-  try {
-    const fileChecksums = await Promise.all(animationFiles.map(async file => ({
-        name: file.relPath,
-        checksum: await conlim.do(async () => {
-          try {
-            return await fileChecksum(path.join(basePath, 'data', file.relPath));
-          } catch (err) {
-            // this will likely lead to unnecessarily running fnis
-            if (err.code !== 'ENOENT') {
-              log('error', 'failed to checksum', { path: file.relPath, error: err.message });
-            } // after uninstalling a mod it's completely valid for a file to be missing
-            return Promise.resolve('');
-          }
-        }),
-      })));
-    const checksum = stringChecksum(JSON.stringify(fileChecksums));
-    return { checksum, mods: Array.from(mods) };
-  } catch (err) {
-    return undefined;
-  }
+  const fileChecksums = await Promise.all(animationFiles.map(async file => ({
+      name: file.relPath,
+      checksum: await conlim.do(async () => {
+        try {
+          return await fileChecksum(path.join(basePath, 'data', file.relPath));
+        } catch (err) {
+          // this will likely lead to unnecessarily running fnis
+          if (err.code !== 'ENOENT') {
+            log('error', 'failed to checksum', { path: file.relPath, error: err.message });
+          } // after uninstalling a mod it's completely valid for a file to be missing
+          return Promise.resolve('');
+        }
+      }),
+    })));
+  const checksum = stringChecksum(JSON.stringify(fileChecksums));
+  return { checksum, mods: Array.from(mods) };
 }
 
 export function fnisTool(state: types.IState, gameId: string) {
