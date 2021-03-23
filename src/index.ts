@@ -57,12 +57,12 @@ function checkFailedResult(t: TranslationFunction,
 }
 
 function init(context: types.IExtensionContext) {
+  context.registerReducer(['settings', 'fnis'], reducer);
   (context.registerSettings as any)('Interface', Settings, undefined, () => {
     const state = context.api.store.getState();
     const gameMode = selectors.activeGameId(state);
     return ['skyrim', 'skyrimse', 'skyrimvr'].indexOf(gameMode) !== -1;
   }, 51);
-  context.registerReducer(['settings', 'fnis'], reducer);
   context.registerToDo(
     'fnis-integration', 'settings',
     (state: types.IState): IFNISProps => {
