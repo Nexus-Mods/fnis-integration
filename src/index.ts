@@ -72,7 +72,10 @@ function init(context: types.IExtensionContext) {
         enabled: autoRun(state),
       };
     }, 'download',
-    'FNIS Integration', (props: IFNISProps) => toggleIntegration(context.api, props.gameMode),
+    'FNIS Integration', (props: IFNISProps) => {
+      toggleIntegration(context.api, props.gameMode)
+      context.api.events.emit('analytics-track-click-event', 'Dashboard', `FNIS ${props.enabled ? 'ON' : 'OFF'}`);
+    },
     (props: IFNISProps) => isSupported(props.gameMode),
     (t: TranslationFunction, props: IFNISProps) => (
       props.enabled ? t('Yes') : t('No')
