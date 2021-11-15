@@ -26,6 +26,7 @@ async function createFNISMod(api: types.IExtensionApi, modName: string,
     attributes: {
       name: 'FNIS Data',
       logicalFileName: 'FNIS Data',
+      source: 'user-generated',
       // concrete id doesn't really matter but needs to be set to for grouping
       modId: 42,
       version: '1.0.0',
@@ -67,6 +68,8 @@ async function ensureFNISMod(api: types.IExtensionApi, profile: types.IProfile):
                                                'logicalFileName', 'FNIS Data'));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'modId', 42));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'version', '1.0.0'));
+    api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'source',
+                                               'user-generated'));
     api.store.dispatch(actions.setModAttribute(profile.gameId, modName, 'variant',
                                                sanitizeProfileName(profile.name)));
     if (mod.installationPath === undefined) {
