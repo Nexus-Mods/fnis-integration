@@ -14,12 +14,17 @@ const gameSupport = {
     fnisModId: 3038,
     patchListName: 'PatchListSE.txt',
   },
+  enderalspecialedition: {
+    nexusSection: 'skyrimspecialedition',
+    fnisModId: 3038,
+    patchListName: 'PatchListSE.txt',
+  },
   skyrimvr: {
     nexusSection: 'skyrimspecialedition',
     fnisModId: 3038,
     patchListName: 'PatchListVR.txt',
-  }
-}
+  },
+};
 
 export function isSupported(gameMode: string): boolean {
   return gameSupport[gameMode] !== undefined;

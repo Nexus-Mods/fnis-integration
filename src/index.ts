@@ -58,10 +58,10 @@ function checkFailedResult(t: TranslationFunction,
 
 function init(context: types.IExtensionContext) {
   context.registerReducer(['settings', 'fnis'], reducer);
-  (context.registerSettings as any)('Interface', Settings, undefined, () => {
+  context.registerSettings('Interface', Settings, undefined, () => {
     const state = context.api.store.getState();
     const gameMode = selectors.activeGameId(state);
-    return ['skyrim', 'skyrimse', 'skyrimvr'].indexOf(gameMode) !== -1;
+    return isSupported(gameMode);
   }, 51);
   context.registerToDo(
     'fnis-integration', 'settings',
@@ -73,7 +73,7 @@ function init(context: types.IExtensionContext) {
       };
     }, 'download',
     'FNIS Integration', (props: IFNISProps) => {
-      toggleIntegration(context.api, props.gameMode)
+      toggleIntegration(context.api, props.gameMode);
       context.api.events.emit('analytics-track-click-event', 'Dashboard', `FNIS ${props.enabled ? 'ON' : 'OFF'}`);
     },
     (props: IFNISProps) => isSupported(props.gameMode),
